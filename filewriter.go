@@ -12,26 +12,40 @@ type Grimoire struct {
 
 func ReadGrimoireFromDisk() Grimoire {
 
+	p := os.ExpandEnv("$HOME/.grimoire.json")
 	g := Grimoire{}
-	if _, err := os.Stat("~/.grimoire.json"); errors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(p); errors.Is(err, os.ErrNotExist) {
+		g.Spells = make(map[string]Spell)
 		return g
 	}
 
-	file, _ := os.ReadFile("~/.grimoire.json")
+	file, _ := os.ReadFile(p)
 	json.Unmarshal(file, &g)
+
+	if g.Spells == nil {
+		g.Spells = make(map[string]Spell)
+	}
 
 	return g
 }
 
 func (g Grimoire) FlushToFile() {
-
-	bytes, err := json.Marshal(g)
+	bytes, err := json.MarshalIndent(g, "", "  ")
 	if err != nil {
 		// what to do with this error?
 		panic(err)
 	}
 
-	err = os.WriteFile("~/.grimoire.json", bytes, 0644)
+	p := os.ExpandEnv("$HOME/.grimoire.json")
+
+	if _, err := os.Stat(p); errors.Is(err, os.ErrNotExist) {
+		_, err = os.Create(p)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	err = os.WriteFile(p, bytes, 0777)
 	if err != nil {
 		panic(err)
 	}

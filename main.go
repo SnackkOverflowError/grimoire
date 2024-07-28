@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	tea "github.com/charmbracelet/bubbletea"
 	"log"
 	"os"
 )
@@ -21,7 +22,6 @@ import (
  */
 
 func main() {
-	fmt.Println("hello world")
 
 	args := os.Args[1:]
 
@@ -32,7 +32,6 @@ func main() {
 
 	switch args[0] {
 	case "collect":
-		fmt.Println("collect")
 		collect_option(args[1:])
 		break
 	case "cast":
@@ -66,9 +65,12 @@ func cast_option(args []string) {
 }
 
 func collect_option(args []string) {
-	_ = ReadGrimoireFromDisk()
-	if len(args) == 0 {
-		// NOTE no args, open the correct view
+	g := ReadGrimoireFromDisk()
+	g.FlushToFile()
+
+	if _, err := tea.NewProgram(initialModel(g)).Run(); err != nil {
+		fmt.Printf("could not start program: %s\n", err)
+		os.Exit(1)
 	}
 
 }
